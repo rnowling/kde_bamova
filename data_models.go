@@ -22,8 +22,9 @@ type PopulationFrequencies struct {
 
 type Sample struct {
 	step int
+	n_loci int
 
-	population_frequencies PopulationFrequencies
+	population_frequencies *PopulationFrequencies
 	locus_phi_values []float64
 }
 
