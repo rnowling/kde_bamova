@@ -6,7 +6,7 @@ import "bufio"
 import "strings"
 import "strconv"
 
-func ReadOccurrences(flname string) (*Occurrences, error) {
+func ReadOccurrences(flname string) (*ObservedData, error) {
 	file, err := os.Open(flname)
 
 	if err != nil {
@@ -42,14 +42,12 @@ func ReadOccurrences(flname string) (*Occurrences, error) {
 			}
 
 			populations = append(populations, haplotype_counts)
-
-
 		}
 	}
 
 	fmt.Printf("Loci: %d, Populations: %d, Haplotypes: %d\n", len(loci), len(loci[0]), len(loci[0][0]))
 
-	occur := Occurrences{n_loci: len(loci), n_populations: len(loci[0]), n_haplotypes: len(loci[0][0]), observed_counts: &loci}
+	observed := NewObservedData(&loci)
 
-	return &occur, err
+	return observed, err
 }
