@@ -20,6 +20,13 @@ type PopulationFrequencies struct {
 	population_frequencies [][][]float64
 }
 
+type Sample struct {
+	step int
+
+	population_frequencies PopulationFrequencies
+	locus_phi_values []float64
+}
+
 func (popFreq *PopulationFrequencies) Copy() *PopulationFrequencies {
 	copy_loci := make([][][]float64, popFreq.n_loci)
 
