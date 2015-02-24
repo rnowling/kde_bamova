@@ -20,6 +20,26 @@ type PopulationFrequencies struct {
 	population_frequencies [][][]float64
 }
 
+func (popFreq *PopulationFrequencies) Copy() *PopulationFrequencies {
+	copy_loci := make([][][]float64, popFreq.n_loci)
+
+	for loci_idx := 0; loci_idx < popFreq.n_loci; loci_idx++ {
+		copy_pop := make([][]float64, popFreq.n_populations)
+		for pop_idx := 0; pop_idx < popFreq.n_populations; pop_idx++ {
+			copy_haplo := make([]float64, popFreq.n_haplotypes)
+			copy(copy_haplo, popFreq.population_frequencies[loci_idx][pop_idx])
+			copy_pop[pop_idx] = copy_haplo
+		}
+		copy_loci[loci_idx] = copy_pop
+	}
+
+	new_pop_freq := PopulationFrequencies{n_loci: popFreq.n_loci, n_populations: popFreq.n_populations, 
+		n_haplotypes: popFreq.n_haplotypes, population_frequencies: copy_loci}
+
+	return &new_pop_freq
+}
+
+
 func NewObservedData(loci_counts *[][][]uint64) *ObservedData {
 	n_loci := len(*loci_counts)
 	n_populations := len((*loci_counts)[0])
