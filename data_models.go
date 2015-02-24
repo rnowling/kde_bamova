@@ -7,19 +7,17 @@ type ObservedData struct {
 
 	observed_counts [][][]uint64
 
-	observed_frequencies [][][]float64
+	observed_frequencies *PopulationFrequencies
 
 	individual_counts [][]uint64
 }
 
-type SimulationState struct {
+type PopulationFrequencies struct {
 	n_loci int
 	n_populations int
 	n_haplotypes int
 
-	loci_phi_values *[]float64
-	population_frequencies *[][][]float64
-	log_probability float64
+	population_frequencies [][][]float64
 }
 
 func NewObservedData(loci_counts *[][][]uint64) *ObservedData {
@@ -33,6 +31,16 @@ func NewObservedData(loci_counts *[][][]uint64) *ObservedData {
 	observed.normalizeCounts()
 
 	return &observed
+}
+
+func NewPopulationFrequencies(freq *[][][]float64) *PopulationFrequencies {
+	n_loci := len(*freq)
+	n_populations := len((*freq)[0])
+	n_haplotypes := len((*freq)[0][0])
+
+	pop_freq := PopulationFrequencies{n_loci: n_loci, n_populations: n_populations, n_haplotypes: n_haplotypes, population_frequencies: *freq}
+
+	return &pop_freq
 }
 
 func (observed *ObservedData) countIndividuals() {
@@ -78,5 +86,5 @@ func (observed *ObservedData) normalizeCounts() {
 		observed_frequencies[i] = pop_freq
 	}
 
-	observed.observed_frequencies = observed_frequencies
+	observed.observed_frequencies = NewPopulationFrequencies(&observed_frequencies)
 }
