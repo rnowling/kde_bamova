@@ -7,9 +7,9 @@ type KernelDensityEstimate struct {
 	bandwidth float64
 }
 
-func KDEfit(model_values []float64, bandwidth float64) *KernelDensityEstimate {
-	model_copy := make([]float64, len(model_values))
-	copy(model_copy, model_values)
+func KDEFit(model_values *[]float64, bandwidth float64) *KernelDensityEstimate {
+	model_copy := make([]float64, len(*model_values))
+	copy(model_copy, *model_values)
 
 	kde := KernelDensityEstimate{model_values: model_copy, bandwidth: bandwidth}
 
@@ -23,7 +23,7 @@ func gaussKernel(x float64) float64 {
 	return num / denom
 }
 
-func (kde *KernelDensityEstimate) KDELogProb(value float64) float64 {
+func (kde *KernelDensityEstimate) LogProb(value float64) float64 {
 	log_prob := float64(0.0)
 
 	nh := float64(len(kde.model_values)) * kde.bandwidth
