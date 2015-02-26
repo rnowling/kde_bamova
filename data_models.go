@@ -89,7 +89,7 @@ func NewLocusFrequenciesFromCounts(locus_counts *LocusCounts) *LocusFrequencies 
 		haplo_freq := make([]float64, locus_counts.n_haplotypes)
 
 		for j := 0; j < locus_counts.n_haplotypes; j++ {
-			haplo_freq[i] = float64(locus_counts.counts[i][j]) / float64(locus_counts.individuals[i])
+			haplo_freq[j] = float64(locus_counts.counts[i][j]) / float64(locus_counts.individuals[i])
 		}
 
 		frequencies[i] = haplo_freq
