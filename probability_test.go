@@ -70,3 +70,39 @@ func TestSampleStandardNormal(t *testing.T) {
 		}
 	}
 }
+
+func TestSampleGamma(t *testing.T) {
+	N_TRIALS := 10
+	N_SAMPLES := 10000000
+	SHAPES := []float64{0.25, 0.5, 0.75, 1.0, 2.0, 5.0}
+	SCALE := float64(1.0) //  for generating Dirichlets, scale is always 1.0
+	tol := 1e-2
+
+	for _, shape := range SHAPES {
+		expectedMean := shape * SCALE
+		expectedVariance := shape * SCALE * SCALE
+
+		for j := 0; j < N_TRIALS; j++ {
+			samples := make([]float64, N_SAMPLES)
+			sampleMean := float64(0.0)
+			for i := 0; i < N_SAMPLES; i++ {
+				sample := SampleGamma(shape, SCALE)
+				sampleMean += sample / float64(N_SAMPLES)
+				samples[i] = sample
+			}
+
+			sampleVariance := float64(0.0)
+			for i := 0; i < N_SAMPLES; i++ {
+				sampleVariance += (samples[i] - sampleMean) * (samples[i] - sampleMean) / float64(N_SAMPLES)
+			}
+
+			if math.Abs(expectedMean - sampleMean) > tol {
+				t.Errorf("Incorrect mean found when sampling SampleGamma(%f, %f). Found: %f, Expected %f", shape, SCALE, sampleMean, expectedMean)
+			}
+
+			if math.Abs(expectedVariance - sampleVariance) > tol {
+				t.Errorf("Incorrect variance found when sampling SampleGamma(%f, %f). Found: %f, Expected %f", shape, SCALE, sampleVariance, expectedVariance)
+			}
+		}
+	}
+}
