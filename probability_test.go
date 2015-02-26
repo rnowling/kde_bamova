@@ -39,3 +39,34 @@ func TestLogMultinomial(t *testing.T) {
 		t.Errorf("LogMultinomial returned incorrect result. Found: %f, Expected %f", result, expected)
 	}
 }
+
+func TestSampleStandardNormal(t *testing.T) {
+	N_TRIALS := 10
+	N_SAMPLES := 10000000
+	expectedMean := 0.0
+	expectedVariance := 1.0
+	tol := 1e-3
+
+	for j := 0; j < N_TRIALS; j++ {
+		samples := make([]float64, N_SAMPLES)
+		sampleMean := float64(0.0)
+		for i := 0; i < N_SAMPLES; i++ {
+			sample := SampleStandardNormal()
+			sampleMean += sample / float64(N_SAMPLES)
+			samples[i] = sample
+		}
+
+		sampleVariance := float64(0.0)
+		for i := 0; i < N_SAMPLES; i++ {
+			sampleVariance += (samples[i] - sampleMean) * (samples[i] - sampleMean) / float64(N_SAMPLES)
+		}
+
+		if math.Abs(sampleMean) > tol {
+			t.Errorf("Incorrect mean found when sampling SampleStandardNormal. Found: %f, Expected %f", sampleMean, expectedMean)
+		}
+
+		if math.Abs(expectedVariance - sampleVariance) > tol {
+			t.Errorf("Incorrect variance found when sampling SampleStandardNormal. Found: %f, Expected %f", sampleVariance, expectedVariance)
+		}
+	}
+}
