@@ -3,6 +3,9 @@ package main
 import "math"
 import "math/rand"
 
+var standardNormalCache float64 = 0.0
+var standardNormalHasCache bool = false
+
 func LogMultinomial(counts []uint64, probabilities []float64) float64 {
 	total_count := uint64(0)
 	mult_log_prob := float64(0.0)
@@ -10,14 +13,8 @@ func LogMultinomial(counts []uint64, probabilities []float64) float64 {
 	fact_denum := float64(0.0)
 
 	for i := 0; i < len(counts); i++ {
-		// log(x^0) = log(1) = 0
-		// log(fact(0)) = 0
-		if counts[i] == 0 {
-			continue
-		}
-
 		// if counts > 0 and prob == 0.0, entire prob is 0
-		if probabilities[i] == 0.0 {
+		if counts[i] > uint64(0) && probabilities[i] == float64(0.0) {
 			return math.Log(float64(0.0000000000001))
 		}
 
@@ -35,11 +32,17 @@ func LogMultinomial(counts []uint64, probabilities []float64) float64 {
 }
 
 func SampleStandardNormal() float64 {
+	if standardNormalHasCache {
+		standardNormalHasCache = false
+		return standardNormalCache
+	}
+
 	u1 := rand.Float64()
 	u2 := rand.Float64()
 
 	z0 := math.Sqrt(-2.0 * math.Log(u1)) * math.Cos(2.0 * math.Pi * u2)
-	//z1 := math.Sqrt(-2.0 * math.Log(u1)) * math.Sin(2.0 * math.Pi * u2)
+	standardNormalCache = math.Sqrt(-2.0 * math.Log(u1)) * math.Sin(2.0 * math.Pi * u2)
+	standardNormalHasCache = true
 
 	return z0
 }
@@ -50,7 +53,6 @@ func SampleGamma(shape float64, scale float64) float64 {
 	} else {
 		return sampleGammaLargeShape(shape, scale)
 	}
-
 }
 
 func sampleGammaSmallShape(shape float64, scale float64) float64 {
@@ -88,7 +90,7 @@ func sampleGammaLargeShape(shape float64, scale float64) float64 {
 	c := 1.0 / (3.0 * math.Sqrt(d))
 
 	for true {
-		x := rand.Float64() // TODO Gaussian
+		x := SampleStandardNormal()
 		base := (1 + c * x)
 		v :=  base * base * base
 
