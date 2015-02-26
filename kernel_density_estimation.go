@@ -7,7 +7,7 @@ type KernelDensityEstimate struct {
 	bandwidth float64
 }
 
-func KDEFit(model_values *[]float64, bandwidth float64) *KernelDensityEstimate {
+func NewKDE(model_values *[]float64, bandwidth float64) *KernelDensityEstimate {
 	model_copy := make([]float64, len(*model_values))
 	copy(model_copy, *model_values)
 
