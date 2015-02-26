@@ -31,6 +31,22 @@ func LogMultinomial(counts []uint64, probabilities []float64) float64 {
 	return fact_num + mult_log_prob - fact_denum
 }
 
+func SampleDirichlet(alphas []float64) []float64 {
+	freq := make([]float64, len(alphas))
+
+	sum := float64(0.0)
+	for i := 0; i < len(alphas); i++ {
+		freq[i] = SampleGamma(alphas[i], 1.0)
+		sum += freq[i]
+	}
+
+	for i := 0; i < len(alphas); i++ {
+		freq[i] = freq[i] / sum
+	}
+
+	return freq
+}
+
 func SampleStandardNormal() float64 {
 	if standardNormalHasCache {
 		standardNormalHasCache = false
