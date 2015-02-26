@@ -4,6 +4,11 @@ import "math"
 import "testing"
 
 func TestLogMultinomial(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping TestLogMultinomial.")
+		return
+	}
+
 	counts := []uint64{1, 1, 1, 1, 1}
 	prob := []float64{0.0, 0.0, 0.0, 0.0, 0.0}
 
@@ -41,6 +46,11 @@ func TestLogMultinomial(t *testing.T) {
 }
 
 func TestSampleStandardNormal(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping TestSampleStandardNormal.")
+		return
+	}
+
 	N_TRIALS := 10
 	N_SAMPLES := 10000000
 	expectedMean := 0.0
@@ -72,6 +82,11 @@ func TestSampleStandardNormal(t *testing.T) {
 }
 
 func TestSampleGamma(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping TestSampleGamma.")
+		return
+	}
+
 	N_TRIALS := 10
 	N_SAMPLES := 10000000
 	SHAPES := []float64{0.25, 0.5, 0.75, 1.0, 2.0, 5.0}
