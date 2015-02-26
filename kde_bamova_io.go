@@ -47,7 +47,7 @@ func ReadOccurrences(flname string) (*ObservedData, error) {
 
 	fmt.Printf("Loci: %d, Populations: %d, Haplotypes: %d\n", len(loci), len(loci[0]), len(loci[0][0]))
 
-	observed := NewObservedData(&loci)
+	observed := NewObservedData(loci)
 
 	return observed, err
 }

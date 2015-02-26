@@ -7,11 +7,8 @@ type KernelDensityEstimate struct {
 	bandwidth float64
 }
 
-func NewKDE(model_values *[]float64, bandwidth float64) *KernelDensityEstimate {
-	model_copy := make([]float64, len(*model_values))
-	copy(model_copy, *model_values)
-
-	kde := KernelDensityEstimate{model_values: model_copy, bandwidth: bandwidth}
+func NewKDE(model_values []float64, bandwidth float64) *KernelDensityEstimate {
+	kde := KernelDensityEstimate{model_values: model_values, bandwidth: bandwidth}
 
 	return &kde
 }

@@ -2,109 +2,98 @@ package main
 
 type ObservedData struct {
 	n_loci int
+
+	locus_counts []*LocusCounts
+	locus_frequencies []*LocusFrequencies
+}
+
+type LocusCounts struct {
 	n_populations int
 	n_haplotypes int
 
-	observed_counts [][][]uint64
-
-	observed_frequencies *PopulationFrequencies
-
-	individual_counts [][]uint64
+	counts [][]uint64
+	individuals []uint64
 }
 
-type PopulationFrequencies struct {
-	n_loci int
+type LocusFrequencies struct {
 	n_populations int
 	n_haplotypes int
 
-	population_frequencies [][][]float64
+	frequencies [][]float64
 }
 
-func (popFreq *PopulationFrequencies) Copy() *PopulationFrequencies {
-	copy_loci := make([][][]float64, popFreq.n_loci)
-
-	for loci_idx := 0; loci_idx < popFreq.n_loci; loci_idx++ {
-		copy_pop := make([][]float64, popFreq.n_populations)
-		for pop_idx := 0; pop_idx < popFreq.n_populations; pop_idx++ {
-			copy_haplo := make([]float64, popFreq.n_haplotypes)
-			copy(copy_haplo, popFreq.population_frequencies[loci_idx][pop_idx])
-			copy_pop[pop_idx] = copy_haplo
-		}
-		copy_loci[loci_idx] = copy_pop
+func (locusFreq *LocusFrequencies) Copy() *LocusFrequencies {
+	copy_locus := make([][]float64, locusFreq.n_populations)
+	for pop_idx := 0; pop_idx < locusFreq.n_populations; pop_idx++ {
+		copy_haplo := make([]float64, locusFreq.n_haplotypes)
+		copy(copy_haplo, locusFreq.frequencies[pop_idx])
+		copy_locus[pop_idx] = copy_haplo
 	}
 
-	new_pop_freq := PopulationFrequencies{n_loci: popFreq.n_loci, n_populations: popFreq.n_populations, 
-		n_haplotypes: popFreq.n_haplotypes, population_frequencies: copy_loci}
+	new_locus_freq := LocusFrequencies{n_populations: locusFreq.n_populations, 
+		n_haplotypes: locusFreq.n_haplotypes, frequencies: copy_locus}
 
-	return &new_pop_freq
+	return &new_locus_freq
+}
+
+func NewLocusCounts(locus_counts [][]uint64) *LocusCounts {
+	n_populations := len(locus_counts)
+	n_haplotypes := len(locus_counts[0])
+
+	individuals := make([]uint64, n_populations)
+	for i := 0; i < n_populations; i++ {
+		for j := 0; j < n_haplotypes; j++ {
+			individuals[i] += locus_counts[i][j]
+		}
+	}
+
+	counts := LocusCounts{n_populations: n_populations, n_haplotypes: n_haplotypes, counts: locus_counts,
+		individuals: individuals}
+
+	return &counts
 }
 
 
-func NewObservedData(loci_counts *[][][]uint64) *ObservedData {
-	n_loci := len(*loci_counts)
-	n_populations := len((*loci_counts)[0])
-	n_haplotypes := len((*loci_counts)[0][0])
+func NewObservedData(loci_counts [][][]uint64) *ObservedData {
+	n_loci := len(loci_counts)
 
-	observed := ObservedData{n_loci: n_loci, n_populations: n_populations, n_haplotypes: n_haplotypes, observed_counts: *loci_counts}
+	observed_counts := make([]*LocusCounts, n_loci)
+	observed_freq := make([]*LocusFrequencies, n_loci)
 
-	observed.countIndividuals()
-	observed.normalizeCounts()
+	for i := 0; i < n_loci; i++ {
+		locus_counts := NewLocusCounts(loci_counts[i])
+		locus_freq := NewLocusFrequenciesFromCounts(locus_counts)
+		observed_counts[i] = locus_counts
+		observed_freq[i] = locus_freq
+	}
+
+	observed := ObservedData{n_loci: n_loci, locus_counts: observed_counts,
+		locus_frequencies: observed_freq}
 
 	return &observed
 }
 
-func NewPopulationFrequencies(freq *[][][]float64) *PopulationFrequencies {
-	n_loci := len(*freq)
-	n_populations := len((*freq)[0])
-	n_haplotypes := len((*freq)[0][0])
+func NewLocusFrequencies(freq [][]float64) *LocusFrequencies {
+	n_populations := len((freq))
+	n_haplotypes := len((freq)[0])
 
-	pop_freq := PopulationFrequencies{n_loci: n_loci, n_populations: n_populations, n_haplotypes: n_haplotypes, population_frequencies: *freq}
+	locus_freq := LocusFrequencies{n_populations: n_populations, n_haplotypes: n_haplotypes, frequencies: freq}
 
-	return &pop_freq
+	return &locus_freq
 }
 
-func (observed *ObservedData) countIndividuals() {
-	individuals := make([][]uint64, observed.n_loci)
+func NewLocusFrequenciesFromCounts(locus_counts *LocusCounts) *LocusFrequencies {
+	frequencies := make([][]float64, locus_counts.n_populations)
 
-	for i := 0; i < observed.n_loci; i++ {
-		pop_counts := make([]uint64, observed.n_populations)
+	for i := 0; i < locus_counts.n_populations; i++ {
+		haplo_freq := make([]float64, locus_counts.n_haplotypes)
 
-		for j := 0; j < observed.n_populations; j++ {
-			sum := uint64(0)
-
-			for k := 0; k < observed.n_haplotypes; k++ {
-				sum += observed.observed_counts[i][j][k]
-			}
-
-			pop_counts[j] = sum
+		for j := 0; j < locus_counts.n_haplotypes; j++ {
+			haplo_freq[i] = float64(locus_counts.counts[i][j]) / float64(locus_counts.individuals[i])
 		}
 
-		individuals[i] = pop_counts
+		frequencies[i] = haplo_freq
 	}
 
-	observed.individual_counts = individuals
-}
-
-func (observed *ObservedData) normalizeCounts() {
-	observed_frequencies := make([][][]float64, observed.n_loci)
-
-	for i := 0; i < observed.n_loci; i++ {
-		loci := observed.observed_counts[i]
-		pop_freq := make([][]float64, observed.n_populations)
-
-		for j := 0; j < observed.n_populations; j++ {
-			population := loci[j]
-			loci_freq := make([]float64, observed.n_haplotypes)
-
-			for k, haplotype_cnt := range population {
-				loci_freq[k] = float64(haplotype_cnt) / float64(observed.individual_counts[i][j])
-			}
-
-			pop_freq[j] = loci_freq
-		}
-
-		observed_frequencies[i] = pop_freq
-	}
-
-	observed.observed_frequencies = NewPopulationFrequencies(&observed_frequencies)
+	return NewLocusFrequencies(frequencies)
 }
