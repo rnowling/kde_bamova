@@ -3,19 +3,6 @@ package main
 import "math"
 import "math/rand"
 
-func logFactorial(n uint64) float64 {
-	if n == 0 || n == 1 {
-		return float64(0.0)
-	}
-
-	log_fact := float64(0.0)
-	for i := uint64(1); i <= n; i++ {
-		log_fact += math.Log(float64(i))
-	}
-
-	return log_fact
-}
-
 func LogMultinomial(counts []uint64, probabilities []float64) float64 {
 	total_count := uint64(0)
 	mult_log_prob := float64(0.0)
@@ -29,7 +16,6 @@ func LogMultinomial(counts []uint64, probabilities []float64) float64 {
 			continue
 		}
 
-
 		// if counts > 0 and prob == 0.0, entire prob is 0
 		if probabilities[i] == 0.0 {
 			return math.Log(float64(0.0000000000001))
@@ -37,12 +23,13 @@ func LogMultinomial(counts []uint64, probabilities []float64) float64 {
 
 		
 		total_count += counts[i]
-		fact_denum += logFactorial(counts[i])
+		lfact, _ := math.Lgamma(float64(counts[i] + 1))
+		fact_denum += lfact
 		mult_log_prob += float64(counts[i]) * math.Log(probabilities[i])
 	}	
 
 	
-	fact_num := logFactorial(total_count)
+	fact_num, _ := math.Lgamma(float64(total_count + 1))
 
 	return fact_num + mult_log_prob - fact_denum
 }
