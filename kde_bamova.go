@@ -41,10 +41,51 @@ func main() {
 
 	fmt.Printf("Loci: %d, Populations: %d, Haplotypes: %d\n", observed.n_loci, observed.locus_counts[0].n_populations, observed.locus_counts[0].n_haplotypes)
 
-	sampler := NewSampler(observed, float64(0.01))
+	sampler := NewSampler(observed, bandwidth)
+
+	var phiOutputFile *os.File
+	var freqOutputFile *os.File
+	var err error
+
+	if phiOutputPath != "" {
+		phiOutputFile, err = os.Create(phiOutputPath)
+
+		if err != nil {
+			fmt.Printf("Failed to open phi output file for writing.\n")
+			os.Exit(1)
+		}
+	}
+
+	if freqOutputPath != "" {
+		freqOutputFile, err = os.Create(freqOutputPath)
+
+		if err != nil {
+			fmt.Printf("Failed to open frequency output file for writing.\n")
+			os.Exit(1)
+		}
+	}
+
 	for step := int64(0); step < steps; step++ {
 		sample := sampler.Sample()
 		fmt.Printf("Step %d, Log Prob %f\n", step, sample.log_probability)
+
+		if step % outputPeriod == 0 {
+			if phiOutputPath != "" {
+				WriteLocusPhiValues(phiOutputFile, sample, step)
+			}
+
+			if freqOutputPath == "" {
+				WriteFrequencies(freqOutputFile, sample, step)
+			}
+		}
+	}
+
+	if phiOutputPath != "" {
+		phiOutputFile.Close()
+	}
+
+	if freqOutputPath != "" {
+		freqOutputFile.Close()
 	}
 	
 }

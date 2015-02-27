@@ -6,6 +6,30 @@ import "bufio"
 import "strings"
 import "strconv"
 
+func WriteFrequencies(fl *os.File, sample *Sample, step int64) {
+	for locus_idx := 0; locus_idx < sample.n_loci; locus_idx++ {
+		
+		locus_frequencies := sample.locus_frequencies[locus_idx]
+		
+		for pop_idx := 0; pop_idx < locus_frequencies.n_populations; pop_idx++ {
+			
+			fl.WriteString(fmt.Sprintf("%d,%d,%d,%d", locus_idx, pop_idx, step, locus_frequencies.n_haplotypes))
+			
+			for haplo_idx := 0; haplo_idx < locus_frequencies.n_haplotypes; haplo_idx++ {
+				fl.WriteString(fmt.Sprintf(",%f", locus_frequencies.frequencies[haplo_idx]))
+			}
+
+			fl.WriteString("\n")
+		}
+	}
+}
+
+func WriteLocusPhiValues(fl *os.File, sample *Sample, step int64) {
+	for locus_idx := 0; locus_idx < sample.n_loci; locus_idx++ {
+		fl.WriteString(fmt.Sprintf("%d,%d,%f\n", step, locus_idx, sample.locus_phi_values[locus_idx]))
+	}
+}
+
 func ReadOccurrences(flname string) (*ObservedData, error) {
 	file, err := os.Open(flname)
 
