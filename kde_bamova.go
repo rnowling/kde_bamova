@@ -74,7 +74,7 @@ func main() {
 				WriteLocusPhiValues(phiOutputFile, sample, step)
 			}
 
-			if freqOutputPath == "" {
+			if freqOutputPath != "" {
 				WriteFrequencies(freqOutputFile, sample, step)
 			}
 		}
