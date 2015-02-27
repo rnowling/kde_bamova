@@ -16,7 +16,7 @@ func WriteFrequencies(fl *os.File, sample *Sample, step int64) {
 			fl.WriteString(fmt.Sprintf("%d,%d,%d,%d", locus_idx, pop_idx, step, locus_frequencies.n_haplotypes))
 			
 			for haplo_idx := 0; haplo_idx < locus_frequencies.n_haplotypes; haplo_idx++ {
-				fl.WriteString(fmt.Sprintf(",%f", locus_frequencies.frequencies[haplo_idx]))
+				fl.WriteString(fmt.Sprintf(",%f", locus_frequencies.frequencies[pop_idx][haplo_idx]))
 			}
 
 			fl.WriteString("\n")
