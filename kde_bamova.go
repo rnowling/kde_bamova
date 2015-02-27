@@ -69,7 +69,7 @@ func main() {
 		sample := sampler.Sample()
 		fmt.Printf("Step %d, Log Prob %f\n", step, sample.log_probability)
 
-		if step % outputPeriod == 0 {
+		if (step + 1) % outputPeriod == 0 {
 			if phiOutputPath != "" {
 				WriteLocusPhiValues(phiOutputFile, sample, step)
 			}
