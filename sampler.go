@@ -123,17 +123,17 @@ func logProbability(freq *LocusFrequencies, params *LocusSimulationParameters) (
 }
 
 func sampleLocus(params *LocusSimulationParameters, initialFreq *LocusFrequencies, output chan *LocusSample) {
+	locus_freq := sampleLocusFreq(initialFreq, 0, params)
+	for pop_idx := 1; pop_idx < initialFreq.n_populations; pop_idx++ {
+		locus_freq = sampleLocusFreq(locus_freq, pop_idx, params)
+	}
+
+	log_prob, phi_st := logProbability(locus_freq, params)
+
+	sample := NewLocusSample(locus_freq, phi_st, log_prob)
+	output <- sample
+
 	for true {
-		locus_freq := sampleLocusFreq(initialFreq, 0, params)
-		for pop_idx := 1; pop_idx < initialFreq.n_populations; pop_idx++ {
-			locus_freq = sampleLocusFreq(locus_freq, pop_idx, params)
-		}
-
-		log_prob, phi_st := logProbability(locus_freq, params)
-
-		sample := NewLocusSample(locus_freq, phi_st, log_prob)
-		output <- sample
-
 		for pop_idx := 0; pop_idx < initialFreq.n_populations; pop_idx++ {
 			proposed_freq := sampleLocusFreq(locus_freq, pop_idx, params)
 
@@ -142,7 +142,7 @@ func sampleLocus(params *LocusSimulationParameters, initialFreq *LocusFrequencie
 			log_r := math.Log(rand.Float64())
 			log_ratio := proposed_log_prob - log_prob
 
-			if proposed_log_prob > log_prob || log_r < log_ratio {
+			if proposed_log_prob >= log_prob || log_r < log_ratio {
 				phi_st = proposed_phi_st
 				log_prob = proposed_log_prob
 				locus_freq = proposed_freq
