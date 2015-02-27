@@ -100,10 +100,6 @@ func sampleLocusFreq(prev_freq *LocusFrequencies, pop_idx int, params *LocusSimu
 
 	new_freq := SampleDirichlet(alphas)
 
-	//for i := 0; i < prev_freq.n_haplotypes; i++ {
-	//	fmt.Printf("Freq Before: %f, Freq After: %f\n", prev_freq.frequencies[pop_idx][i], new_freq[i])
-	//}
-
 	new_locus_freq := prev_freq.Copy()
 	new_locus_freq.frequencies[pop_idx] = new_freq
 
