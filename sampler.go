@@ -130,10 +130,10 @@ func sampleLocus(params *LocusSimulationParameters, initialFreq *LocusFrequencie
 
 	log_prob, phi_st := logProbability(locus_freq, params)
 
-	sample := NewLocusSample(locus_freq, phi_st, log_prob)
-	output <- sample
-
 	for true {
+		sample := NewLocusSample(locus_freq, phi_st, log_prob)
+		output <- sample
+
 		for pop_idx := 0; pop_idx < initialFreq.n_populations; pop_idx++ {
 			proposed_freq := sampleLocusFreq(locus_freq, pop_idx, params)
 
@@ -148,8 +148,5 @@ func sampleLocus(params *LocusSimulationParameters, initialFreq *LocusFrequencie
 				locus_freq = proposed_freq
 			}
 		}
-
-		sample = NewLocusSample(locus_freq, phi_st, log_prob)
-		output <- sample
 	}
 }
