@@ -4,6 +4,14 @@ import "fmt"
 import "math"
 import "math/rand"
 
+type Model int
+
+const (
+	KDE_MODEL Model = iota
+	UNIFORM_MODEL Model = iota
+	SINGLE_MODEL Model = iota
+)
+
 type Sampler struct {
 	n_loci int
 	// thread pool
@@ -11,8 +19,9 @@ type Sampler struct {
 }
 
 type LocusSimulationParameters struct {
-	kde *KernelDensityEstimate
+	kde *KernelDensityEstimate // nil if model is not KDE_MODEL
 	counts *LocusCounts
+	model Model
 }
 
 type LocusSample struct {
@@ -32,6 +41,8 @@ type Sample struct {
 	log_probability float64
 }
 
+
+
 func NewLocusSample(freq *LocusFrequencies, phi_st float64, log_probability float64) *LocusSample {
 	sample := LocusSample{n_populations: freq.n_populations, n_haplotypes:
 		freq.n_haplotypes, freq: freq, phi_st: phi_st, log_probability: log_probability}
@@ -39,25 +50,28 @@ func NewLocusSample(freq *LocusFrequencies, phi_st float64, log_probability floa
 	return &sample
 }
 
-func NewLocusSimulationParameters(kde *KernelDensityEstimate, counts *LocusCounts) *LocusSimulationParameters {
-	params := LocusSimulationParameters{kde: kde, counts: counts}
+func NewLocusSimulationParameters(model Model, kde *KernelDensityEstimate, counts *LocusCounts) *LocusSimulationParameters {
+	params := LocusSimulationParameters{model: model, kde: kde, counts: counts}
 
 	return &params
 }
 
-func NewSampler(observed *ObservedData, bandwidth float64) *Sampler {
+func NewSampler(model Model, observed *ObservedData, bandwidth float64) *Sampler {
 	n_loci := observed.n_loci
 
 	fmt.Printf("Calculating phis\n")
 	locus_phi_values := CalculatePhis(observed.locus_frequencies, observed.locus_counts)
 
-	fmt.Printf("Training KDE\n")
-	kde := NewKDE(*locus_phi_values, bandwidth)
+	var kde *KernelDensityEstimate = nil
+	if model == KDE_MODEL {
+		fmt.Printf("Training KDE\n")
+		kde = NewKDE(*locus_phi_values, bandwidth)
+	}
 
 	fmt.Printf("Creating go routines\n")
 	sampler_channels := make([]chan *LocusSample, n_loci)
 	for i := 0; i < n_loci; i++ {
-		params := NewLocusSimulationParameters(kde, observed.locus_counts[i])
+		params := NewLocusSimulationParameters(model, kde, observed.locus_counts[i])
 		sampler_channels[i] = make(chan *LocusSample)
 
 		go sampleLocus(params, observed.locus_frequencies[i], sampler_channels[i])
@@ -108,7 +122,11 @@ func sampleLocusFreq(prev_freq *LocusFrequencies, pop_idx int, params *LocusSimu
 
 func logProbability(freq *LocusFrequencies, params *LocusSimulationParameters) (float64, float64) {
 	phi_st := CalculateLocusPhi(freq, params.counts)
-	log_prob := params.kde.LogProb(phi_st)
+	log_prob := float64(0.0)
+
+	if params.model == KDE_MODEL {
+		log_prob += params.kde.LogProb(phi_st)
+	}
 
 	for pop_idx := 0; pop_idx < params.counts.n_populations; pop_idx++ {
 		log_prob += LogMultinomial(params.counts.counts[pop_idx],

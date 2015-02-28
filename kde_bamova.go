@@ -11,6 +11,7 @@ var phiOutputPath string
 var freqOutputPath string
 var bandwidth float64
 var outputPeriod int64
+var modelString string
 
 func parseArgs() {
 	flag.Int64Var(&seed, "seed", -1, "Seed for RNG")
@@ -20,6 +21,7 @@ func parseArgs() {
 	flag.StringVar(&freqOutputPath, "freqOut", "", "Frequency output file")
 	flag.Float64Var(&bandwidth, "bandwidth", 0.01, "Bandwidth for KDE")
 	flag.Int64Var(&outputPeriod, "outputPeriod", 10, "Output period")
+	flag.StringVar(&modelString, "model", "", "Model: kde, uniform, or single.")
 
 	flag.Parse()
 
@@ -32,6 +34,11 @@ func parseArgs() {
 		fmt.Printf("Number of steps not specified.\n")
 		os.Exit(1)
 	}
+
+	if modelString != "kde" && modelString != "uniform" && modelString != "single" {
+		fmt.Printf("Invalid model specified. Options are kde, uniform, and single.\n")
+		os.Exit(1)
+	}
 }
 
 func main() {
@@ -39,9 +46,10 @@ func main() {
 
 	observed, _ := ReadOccurrences(inputPath)
 
-	fmt.Printf("Loci: %d, Populations: %d, Haplotypes: %d\n", observed.n_loci, observed.locus_counts[0].n_populations, observed.locus_counts[0].n_haplotypes)
+	fmt.Printf("Loci: %d, Populations: %d, Haplotypes: %d\n", observed.n_loci, observed.locus_counts[0].n_populations, 
+		observed.locus_counts[0].n_haplotypes)
 
-	sampler := NewSampler(observed, bandwidth)
+	
 
 	var phiOutputFile *os.File
 	var freqOutputFile *os.File
@@ -65,6 +73,17 @@ func main() {
 		}
 	}
 
+	var model Model
+
+	if modelString == "kde" {
+		model = KDE_MODEL
+	} else if modelString == "uniform" {
+		model = UNIFORM_MODEL
+	} else if modelString == "single" {
+		model = SINGLE_MODEL
+	}
+
+	sampler := NewSampler(model, observed, bandwidth)
 	for step := int64(0); step < steps; step++ {
 		sample := sampler.Sample()
 		fmt.Printf("Step %d, Log Prob %f\n", step, sample.log_probability)
