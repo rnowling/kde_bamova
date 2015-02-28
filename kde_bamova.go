@@ -21,7 +21,7 @@ func parseArgs() {
 	flag.StringVar(&freqOutputPath, "freqOut", "", "Frequency output file")
 	flag.Float64Var(&bandwidth, "bandwidth", 0.01, "Bandwidth for KDE")
 	flag.Int64Var(&outputPeriod, "outputPeriod", 10, "Output period")
-	flag.StringVar(&modelString, "model", "", "Model: kde, uniform, or single.")
+	flag.StringVar(&modelString, "model", "", "Model: kde, uniform, single, or kde_only.")
 
 	flag.Parse()
 
@@ -35,8 +35,8 @@ func parseArgs() {
 		os.Exit(1)
 	}
 
-	if modelString != "kde" && modelString != "uniform" && modelString != "single" {
-		fmt.Printf("Invalid model specified. Options are kde, uniform, and single.\n")
+	if modelString != "kde" && modelString != "uniform" && modelString != "single"  && modelString != "kde_only" {
+		fmt.Printf("Invalid model specified. Options are kde, uniform, single, and kde_only.\n")
 		os.Exit(1)
 	}
 }
@@ -81,6 +81,8 @@ func main() {
 		model = UNIFORM_MODEL
 	} else if modelString == "single" {
 		model = SINGLE_MODEL
+	} else if modelString == "kde_only" {
+		model = KDE_ONLY_MODEL
 	}
 
 	sampler := NewSampler(model, observed, bandwidth)

@@ -10,6 +10,7 @@ const (
 	KDE_MODEL Model = iota
 	UNIFORM_MODEL Model = iota
 	SINGLE_MODEL Model = iota
+	KDE_ONLY_MODEL Model = iota
 )
 
 type Sampler struct {
@@ -63,7 +64,7 @@ func NewSampler(model Model, observed *ObservedData, bandwidth float64) *Sampler
 	locus_phi_values := CalculatePhis(observed.locus_frequencies, observed.locus_counts)
 
 	var kde *KernelDensityEstimate = nil
-	if model == KDE_MODEL {
+	if model == KDE_MODEL || model == KDE_ONLY_MODEL {
 		fmt.Printf("Training KDE\n")
 		kde = NewKDE(*locus_phi_values, bandwidth)
 	}
@@ -124,13 +125,15 @@ func logProbability(freq *LocusFrequencies, params *LocusSimulationParameters) (
 	phi_st := CalculateLocusPhi(freq, params.counts)
 	log_prob := float64(0.0)
 
-	if params.model == KDE_MODEL {
+	if params.model == KDE_MODEL || params.model == KDE_ONLY_MODEL {
 		log_prob += params.kde.LogProb(phi_st)
 	}
 
-	for pop_idx := 0; pop_idx < params.counts.n_populations; pop_idx++ {
-		log_prob += LogMultinomial(params.counts.counts[pop_idx],
-			freq.frequencies[pop_idx])
+	if params.model != KDE_ONLY_MODEL {
+		for pop_idx := 0; pop_idx < params.counts.n_populations; pop_idx++ {
+			log_prob += LogMultinomial(params.counts.counts[pop_idx],
+				freq.frequencies[pop_idx])
+		}
 	}
 
 	return log_prob, phi_st
